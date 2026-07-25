@@ -6,7 +6,9 @@
 
 ## Phases
 
-🔲 Phase 1 — Project Setup
+✅ Phase 1 — Project Setup (Backend)
+   - FastAPI app structure, Motor MongoDB connection, health check verified working
+   - Frontend: folder structure only (components/, pages/, hooks/, etc.) — empty, not initialized. Vite/Tailwind/React setup deferred to Phase 8.
 🔲 Phase 2 — Browser Automation
 🔲 Phase 3 — Job Extraction & Storage
 🔲 Phase 4 — AI Ranking

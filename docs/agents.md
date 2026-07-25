@@ -31,6 +31,8 @@
 
 **Notes:** Each portal returns data in a different format. This agent normalizes all of them into one consistent shape. It must populate `required_skills` and `preferred_skills` even when the portal doesn't separate them — the LLM infers the split from `raw_description`.
 
+**Unstop Structured Data Path:** Unstop's scraper (`backend/tools/unstop.py`) returns pre-structured JSON from Unstop's public API instead of raw HTML. Each Unstop result includes a `"structured": True` flag along with already-extracted top-level fields: `title`, `company`, `location`, `salary`, `skills`, and `description`. The Extraction Agent should detect this flag and, when present, apply direct field mapping to the `jobs` schema — **no LLM parsing call is needed** for Unstop listings. This saves one LLM invocation per Unstop result. Internshala and Wellfound results continue to carry `raw_html` with actual HTML content and require full LLM-based extraction.
+
 ---
 
 ## 3. Ranking Agent
