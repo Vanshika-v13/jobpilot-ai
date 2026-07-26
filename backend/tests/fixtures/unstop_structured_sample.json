@@ -1,0 +1,15 @@
+[
+  {
+    "source": "unstop",
+    "structured": true,
+    "title": "Software Engineer Intern",
+    "company": "Zeta Industries",
+    "location": "Remote, India",
+    "salary": "₹25000 - 35000 (monthly)",
+    "skills": ["Python", "FastAPI", "MongoDB"],
+    "description": "<p>We are seeking a Software Engineer Intern to join our team...</p>",
+    "raw_html": "{\"title\": \"Software Engineer Intern\", \"organisation\": {\"name\": \"Zeta Industries\"}}",
+    "url": "https://unstop.com/jobs/software-engineer-intern-12345",
+    "scraped_at": "2026-07-25T17:20:00+00:00"
+  }
+]

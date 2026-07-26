@@ -59,7 +59,7 @@ FastAPI server, organized by responsibility:
 
 ## Browser Automation Flow
 
-- One scraper module per portal (`internshala.py`, `wellfound.py`, `unstop.py`).
+- One scraper module per portal (`internshala.py`, `unstop.py`).
 - Each scraper uses Playwright to navigate, paginate, and extract raw HTML/JSON.
 - Raw content is passed to the Extraction Agent, which normalizes it into the `jobs` schema from [database.md](./database.md).
 - Adding a new portal = one new scraper file + no changes to downstream agents.

@@ -1,6 +1,6 @@
 # Development Phases
 
-> Current phase: **Phase 1**
+> Current phase: **Phase 3 (verification in progress)**
 > Update this marker as each phase is completed.
 
 ---
@@ -21,9 +21,10 @@ Initialize backend app, wire up the database, and confirm everything runs.
 Build Playwright scrapers that can pull raw job data from each portal.
 
 - Create scraper module for Internshala
-- Create scraper module for Wellfound
 - Create scraper module for Unstop
 - Each scraper outputs raw HTML/JSON per listing — no normalization yet
+
+> **Note:** Wellfound was evaluated during this phase and excluded from V1 scope due to active anti-bot enforcement (CAPTCHA challenges, IP-based blocking) discovered during implementation, making reliable automated scraping infeasible.
 
 ---
 
@@ -34,7 +35,7 @@ Normalize scraped data into the standard job schema and persist it.
 - Build the Extraction Agent (raw content → `jobs` schema from [database.md](./database.md))
 - Save normalized jobs to the `jobs` collection in MongoDB
 - Create the `job_searches` record to link results back to a search
-- Verify all fields populate correctly across all three portals
+- Verify all fields populate correctly across both portals
 
 ---
 
@@ -83,6 +84,25 @@ Allow users to export job results and analysis to a file.
 
 ---
 
+## Phase 7.5 — Authentication
+
+- POST /auth/signup, POST /auth/login endpoints
+- Password hashing (bcrypt), JWT token generation/validation
+- Protect existing endpoints with token auth
+- Link user_profiles/job_searches to authenticated user_id
+
+---
+
+## Phase 7.6 — Resume Upload & Profile Extraction
+
+- POST /profile/upload-resume endpoint (PDF upload)
+- Extract raw text from PDF (pdfplumber/PyPDF2)
+- Reuse existing get_llm() factory to extract structured skills/experience/education from resume text (same pattern as Extraction Agent)
+- Save into existing user_profiles fields (resume_text, skills, experience_years, education)
+- Optional alternative to manual skill entry
+
+---
+
 ## Phase 8 — Frontend Integration & Polish
 
 Initialize React + Vite + Tailwind CSS and connect all backend endpoints to the React UI.
@@ -93,3 +113,4 @@ Initialize React + Vite + Tailwind CSS and connect all backend endpoints to the 
 - Wire up export functionality
 - Responsive layout, loading states, error handling
 - End-to-end user flow testing
+

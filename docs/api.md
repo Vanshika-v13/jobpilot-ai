@@ -51,6 +51,33 @@ Exports one or more jobs to a downloadable file.
 
 ---
 
+### `POST /auth/signup`
+
+Creates a new user account.
+
+- **Request:** `email`, `password`, `full_name` (as defined in `users` schema)
+- **Response:** `user_id` (matching `users._id`), `email`, `full_name`
+
+---
+
+### `POST /auth/login`
+
+Authenticates a user and returns a JWT access token.
+
+- **Request:** `email`, `password`
+- **Response:** `access_token`, `token_type`
+
+---
+
+### `POST /profile/upload-resume`
+
+Uploads a PDF resume, extracts the text, uses the LLM to structure details, and updates the profile.
+
+- **Request:** `file` (PDF upload, multipart/form-data), headers: `Authorization: Bearer <token>`
+- **Response:** Updates and returns the `user_profiles` document (`user_id`, `skills`, `experience_years`, `education`, `resume_text`)
+
+---
+
 ## V2 Endpoints *(future — not yet designed)*
 
 - `GET /saved-jobs` — list user's bookmarked jobs

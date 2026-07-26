@@ -49,7 +49,7 @@ Record of each search a user triggers. Inputs only — results link to `jobs`.
 | `user_id` | ObjectId | Reference to `users._id` |
 | `query` | string | Free-text search term (e.g. "Python developer") |
 | `location` | string | Location filter applied |
-| `source` | string | Portal targeted (e.g. "internshala", "wellfound", "unstop", "all") |
+| `source` | string | Portal targeted (e.g. "internshala", "unstop", "all") |
 | `filters` | object | Any additional filters (experience, salary range, etc.) |
 | `status` | string | `pending` · `running` · `completed` · `failed` |
 | `job_count` | number | Number of jobs returned |
@@ -71,7 +71,7 @@ Standardized job object scraped and normalized from any portal. This is the core
 | `salary` | string | Salary range as displayed on portal (may be "Not disclosed") |
 | `apply_link` | string | Direct URL to the job listing |
 | `posted_date` | string | Date posted as shown on portal |
-| `source` | string | Portal it was scraped from (`internshala`, `wellfound`, `unstop`, etc.) |
+| `source` | string | Portal it was scraped from (`internshala`, `unstop`) |
 | `required_skills` | string[] | Skills listed as mandatory |
 | `preferred_skills` | string[] | Skills listed as nice-to-have |
 | `raw_description` | string | Full job description text, unmodified |

@@ -6,7 +6,7 @@ FIXTURE_PATH = Path(__file__).parent / "fixtures" / "internshala_sample.html"
 
 def test_build_internshala_url():
     url = build_internshala_url("Software Developer", "Bangalore")
-    assert "software-developer-internships-in-bangalore" in url
+    assert "keywords-software-developer-in-bangalore" in url
 
     url_role_only = build_internshala_url("Frontend Developer", "")
     assert "keywords-frontend-developer" in url_role_only

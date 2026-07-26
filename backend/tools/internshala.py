@@ -4,6 +4,7 @@ from urllib.parse import quote
 
 from playwright.async_api import async_playwright
 from tools.utils import random_delay
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +25,22 @@ USER_AGENT = (
 def build_internshala_url(role: str, location: str) -> str:
     """
     Constructs a search URL for Internshala internships/jobs.
+
+    Uses Internshala's keyword search path (``keywords-<term>``) combined
+    with the ``-in-<location>`` suffix.  This ensures free-text queries
+    like "python developer" are sent to the server as a keyword filter
+    rather than being treated as a (non-existent) category slug, which
+    Internshala silently ignores and falls back to generic results.
     """
-    role_slug = quote(role.strip().lower().replace(" ", "-"))
-    loc_slug = quote(location.strip().lower().replace(" ", "-"))
-    
+    role_slug = role.strip().lower().replace(" ", "-") if role else ""
+    loc_slug = location.strip().lower().replace(" ", "-") if location else ""
+
     if role_slug and loc_slug:
-        return f"https://internshala.com/internships/{role_slug}-internships-in-{loc_slug}/"
+        return f"https://internshala.com/internships/keywords-{quote(role_slug)}-in-{quote(loc_slug)}/"
     elif role_slug:
-        return f"https://internshala.com/internships/keywords-{role_slug}/"
+        return f"https://internshala.com/internships/keywords-{quote(role_slug)}/"
     elif loc_slug:
-        return f"https://internshala.com/internships/matching-preference-in-{loc_slug}/"
+        return f"https://internshala.com/internships/matching-preference-in-{quote(loc_slug)}/"
     return "https://internshala.com/internships/"
 
 async def scrape_internshala(role: str, location: str, max_results: int = 20) -> list[dict]:
@@ -55,7 +62,7 @@ async def scrape_internshala(role: str, location: str, max_results: int = 20) ->
     
     try:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(headless=settings.headless)
             context = await browser.new_context(
                 user_agent=USER_AGENT,
                 viewport={"width": 1280, "height": 800}
