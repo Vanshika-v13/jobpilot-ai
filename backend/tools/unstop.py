@@ -28,7 +28,7 @@ def build_unstop_url(role: str, location: str) -> str:
 
     params = []
     if role_encoded:
-        params.append(f"search={role_encoded}")
+        params.append(f"searchTerm={role_encoded}")
     if location_encoded:
         params.append(f"location={location_encoded}")
 
@@ -47,7 +47,7 @@ def _build_api_params(role: str, location: str, per_page: int) -> dict:
         "page": 1,
     }
     if role.strip():
-        params["search"] = role.strip()
+        params["searchTerm"] = role.strip()
     if location.strip():
         params["city"] = location.strip()
     return params
@@ -170,6 +170,10 @@ async def scrape_unstop(role: str, location: str, max_results: int = 20) -> list
         ) as client:
             resp = await client.get(api_url)
             resp.raise_for_status()
+            # Explicitly set UTF-8 encoding before .json() — httpx's
+            # auto-detection can misinterpret multi-byte chars (e.g. ₹)
+            # when the server omits charset in Content-Type.
+            resp.encoding = "utf-8"
             payload = resp.json()
 
         # The API wraps listings in  data -> data  (paginated Laravel response)

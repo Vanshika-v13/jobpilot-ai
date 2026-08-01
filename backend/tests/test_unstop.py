@@ -7,7 +7,7 @@ from tools.unstop import scrape_unstop, build_unstop_url, _build_api_params, _ex
 def test_build_unstop_url():
     url = build_unstop_url("Data Scientist", "Delhi")
     assert "unstop.com/jobs" in url
-    assert "search=Data%20Scientist" in url
+    assert "searchTerm=Data%20Scientist" in url
     assert "location=Delhi" in url
 
 
@@ -20,14 +20,14 @@ def test_build_api_params():
     params = _build_api_params("backend developer", "bangalore", per_page=5)
     assert params["opportunity"] == "jobs"
     assert params["oppstatus"] == "open"
-    assert params["search"] == "backend developer"
+    assert params["searchTerm"] == "backend developer"
     assert params["city"] == "bangalore"
     assert params["per_page"] == 5
 
 
 def test_build_api_params_empty_location():
     params = _build_api_params("developer", "", per_page=10)
-    assert "search" in params
+    assert "searchTerm" in params
     assert "city" not in params
 
 

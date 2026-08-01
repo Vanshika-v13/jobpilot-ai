@@ -102,15 +102,18 @@ async def insert_jobs(jobs_list: List[Dict[str, Any]]) -> List[str]:
                 {"_id": 1}
             )
             if existing:
-                # Refresh scraped_at so we know it was seen in this scrape
+                # Refresh scraped_at and search_id so it is associated with the current search
+                update_fields = {"scraped_at": job_doc["scraped_at"]}
+                if "search_id" in job_doc and job_doc["search_id"] is not None:
+                    update_fields["search_id"] = job_doc["search_id"]
                 await db.jobs.update_one(
                     {"_id": existing["_id"]},
-                    {"$set": {"scraped_at": job_doc["scraped_at"]}}
+                    {"$set": update_fields}
                 )
                 affected_ids.append(str(existing["_id"]))
                 updated_count += 1
                 logger.debug(
-                    f"Skipped duplicate job (apply_link already exists): {apply_link}"
+                    f"Updated duplicate job (apply_link already exists): {apply_link}"
                 )
                 continue
 

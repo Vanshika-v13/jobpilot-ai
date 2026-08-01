@@ -7,7 +7,77 @@ from agents.extraction_agent import (
     extract_structured_job,
     extract_html_job,
     process_scraped_results,
+    sanitize_description,
 )
+
+
+# ---------------------------------------------------------------------------
+# sanitize_description
+# ---------------------------------------------------------------------------
+
+class TestSanitizeDescription:
+    """Tests for the AI-chat HTML sanitisation function."""
+
+    CONTAMINATED_HTML = (
+        '<h1 class="text-black fw-bold display-5 text-break mb-3">'
+        '<span lang="en-US">SAP is hiring!</span></h1>\n'
+        '<p><strong>Responsibilities:</strong></p>\n'
+        '<div class="qMYqUG_convSearchResultHighlightRoot">\n'
+        '<div data-turn-id-container="request-WEB:abc-14" data-is-intersecting="true">\n'
+        '<section class="text-token-text-primary w-full" '
+        'data-testid="conversation-turn-10" data-turn="assistant">\n'
+        '<div class="markdown prose dark:prose-invert wrap-break-word">\n'
+        '<ul data-start="0" data-end="200">\n'
+        '<li data-start="0" data-end="50">Build scalable systems.</li>\n'
+        '<li data-start="51" data-end="100">Monitor performance.</li>\n'
+        '</ul>\n'
+        '</div>\n</section>\n</div>\n</div>\n'
+        '<p><strong>Requirements:</strong></p>\n'
+        '<div class="qMYqUG_convSearchResultHighlightRoot">\n'
+        '<div data-turn-id-container="request-WEB:abc-13">\n'
+        '<section class="text-token-text-primary" '
+        'data-message-author-role="assistant" '
+        'data-message-model-slug="gpt-5-5">\n'
+        '<div class="markdown prose">\n'
+        '<ul><li>Strong coding skills.</li></ul>\n'
+        '</div>\n</section>\n</div>\n</div>'
+    )
+
+    def test_strips_chat_artifacts(self):
+        result = sanitize_description(self.CONTAMINATED_HTML)
+
+        # Content is preserved
+        assert "Build scalable systems." in result
+        assert "Monitor performance." in result
+        assert "Strong coding skills." in result
+        assert "<strong>Responsibilities:</strong>" in result
+
+        # Chat artifacts are gone
+        assert "data-message-author-role" not in result
+        assert "data-message-model-slug" not in result
+        assert "gpt-5-5" not in result
+        assert "data-turn-id" not in result
+        assert "conversation-turn" not in result
+        assert "convSearchResultHighlightRoot" not in result
+        assert "text-token-text-primary" not in result
+        assert "markdown prose" not in result
+
+        # Wrapper divs/sections are removed
+        assert "<div" not in result
+        assert "<section" not in result
+
+    def test_leaves_clean_html_unchanged(self):
+        clean = (
+            "<p><strong>About Us:</strong></p>\n"
+            "<ul>\n<li>We build great products.</li>\n</ul>"
+        )
+        assert sanitize_description(clean) == clean
+
+    def test_empty_and_none_passthrough(self):
+        assert sanitize_description("") == ""
+        assert sanitize_description(None) is None
+
+
 
 def test_extract_structured_job():
     raw_job = {
