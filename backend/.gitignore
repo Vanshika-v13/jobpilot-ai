@@ -1,0 +1,6 @@
+# Ignore static exports
+static/exports/*.xlsx
+static/exports/*.pdf
+__pycache__/
+*.pyc
+.pytest_cache/
