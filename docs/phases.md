@@ -1,6 +1,6 @@
 # Development Phases
 
-> Current phase: **Phase 5**
+> Current phase: **Phase 6**
 > Update this marker as each phase is completed.
 
 ---

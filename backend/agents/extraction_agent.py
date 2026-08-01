@@ -2,6 +2,7 @@ import logging
 import re
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
+from langchain_core.output_parsers import PydanticOutputParser
 from datetime import datetime, timezone
 from bson import ObjectId
 
@@ -143,14 +144,41 @@ async def extract_html_job(raw_job: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract structured job details from raw HTML/text using LangChain + LLM.
     """
+    parser = PydanticOutputParser(pydantic_object=ExtractedJob)
     llm = get_llm()
-    structured_llm = llm.with_structured_output(ExtractedJob)
     
     html_content = raw_job.get("raw_html", "")
+    prompt = EXTRACTION_PROMPT.format(
+        html_content=html_content,
+        format_instructions=parser.get_format_instructions()
+    )
     
-    prompt = EXTRACTION_PROMPT.format(html_content=html_content)
-    
-    extracted: ExtractedJob = await structured_llm.ainvoke(prompt)
+    try:
+        response = await llm.ainvoke(prompt)
+        extracted: ExtractedJob = parser.invoke(response)
+        
+        # Check if core fields are essentially empty/default
+        if (extracted.company in ["Not disclosed", ""] and
+            extracted.role in ["Not disclosed", ""] and
+            not extracted.required_skills and
+            not extracted.raw_description):
+            raise ValueError("All core fields empty. Likely a parsing failure.")
+            
+    except Exception as e:
+        logger.warning(f"Initial extraction failed: {e}. Retrying once...")
+        try:
+            retry_prompt = prompt + "\n\nCRITICAL: Respond with valid JSON ONLY. Do not wrap in markdown code blocks."
+            response = await llm.ainvoke(retry_prompt)
+            extracted: ExtractedJob = parser.invoke(response)
+            
+            if (extracted.company in ["Not disclosed", ""] and
+                extracted.role in ["Not disclosed", ""] and
+                not extracted.required_skills and
+                not extracted.raw_description):
+                raise ValueError("All core fields empty on retry.")
+        except Exception as retry_e:
+            logger.error(f"Retry extraction failed: {retry_e}")
+            raise retry_e
     
     if hasattr(extracted, "model_dump"):
         job_dict = extracted.model_dump()

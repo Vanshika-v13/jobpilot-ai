@@ -110,26 +110,23 @@ def test_extract_structured_job():
 @pytest.mark.asyncio
 @patch("agents.extraction_agent.get_llm")
 async def test_extract_html_job(mock_get_llm):
-    # Mock LLM and structured output
-    mock_llm = MagicMock()
-    mock_structured_llm = AsyncMock()
+    # Mock LLM to return JSON string matching the parser expectations
+    mock_llm = AsyncMock()
     mock_get_llm.return_value = mock_llm
-    mock_llm.with_structured_output.return_value = mock_structured_llm
     
-    # Mock returned pydantic model
-    mock_job_model = ExtractedJob(
-        company="TechCorp Solutions",
-        role="Frontend Engineer",
-        location="Pune",
-        salary="₹40,000 / month",
-        posted_date="2026-07-24",
-        required_skills=["React", "TypeScript"],
-        preferred_skills=["Next.js"],
-        raw_description="Build modern web UIs...",
-        experience_required="0-2 years",
-        job_type="full-time",
-    )
-    mock_structured_llm.ainvoke.return_value = mock_job_model
+    mock_job_json = """{
+        "company": "TechCorp Solutions",
+        "role": "Frontend Engineer",
+        "location": "Pune",
+        "salary": "₹40,000 / month",
+        "posted_date": "2026-07-24",
+        "required_skills": ["React", "TypeScript"],
+        "preferred_skills": ["Next.js"],
+        "raw_description": "Build modern web UIs...",
+        "experience_required": "0-2 years",
+        "job_type": "full-time"
+    }"""
+    mock_llm.ainvoke.return_value = mock_job_json
     
     raw_job = {
         "source": "internshala",
@@ -153,8 +150,7 @@ async def test_extract_html_job(mock_get_llm):
     assert normalized["job_type"] == "full-time"
     assert normalized["scraped_at"] == "2026-07-25T18:30:00Z"
     
-    mock_llm.with_structured_output.assert_called_once_with(ExtractedJob)
-    mock_structured_llm.ainvoke.assert_called_once()
+    mock_llm.ainvoke.assert_called_once()
 
 @pytest.mark.asyncio
 @patch("agents.extraction_agent.update_job_search_status")

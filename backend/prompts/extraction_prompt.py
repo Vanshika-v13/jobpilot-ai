@@ -92,4 +92,10 @@ IMPORTANT REMINDERS
 JOB LISTING CONTENT
 ═══════════════════════════════════════════════════════════════════════════
 {html_content}
+
+═══════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT
+═══════════════════════════════════════════════════════════════════════════
+You must respond with valid JSON ONLY. Do not include markdown code fences (like ````json````) or any conversational text before or after the JSON.
+{format_instructions}
 """
