@@ -21,8 +21,11 @@
    - Extraction prompt moved to dedicated `backend/prompts/extraction_prompt.py` module
    - pytest config fixed: `backend/pytest.ini` with `pythonpath = .` + `testpaths = tests`
    - All 14 backend unit tests passing
-🚧 Phase 4 — AI Ranking  ← current phase
-🔲 Phase 5 — JD Analysis & Skill Gap
+✅ Phase 4 — AI Ranking
+   - Planner Agent, Ranking Agent (hybrid scoring + LLM explanations), LangGraph pipeline, POST /search and POST /profiles endpoints all verified working end-to-end with real data.
+   - Fixed: Unstop searchTerm parameter bug, search_id/deduplication interaction bug, HTML contamination sanitization, JSON encoding safety (SafeJSONResponse).
+   - Known limitation: Internshala scraper fails inside Uvicorn on Windows due to Playwright/asyncio event loop incompatibility — Unstop unaffected, pipeline degrades gracefully (documented, not yet resolved).
+🚧 Phase 5 — JD Analysis & Skill Gap  ← current phase
 🔲 Phase 6 — Interview Question Generation
 🔲 Phase 7 — Export
 🔲 Phase 8 — Frontend Integration & Polish
