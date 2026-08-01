@@ -13,3 +13,15 @@ class JobAnalysisResponse(BaseModel):
     experience_required: str = ""
     responsibilities: List[str] = Field(default_factory=list)
     important_keywords: List[str] = Field(default_factory=list)
+
+class InterviewQuestion(BaseModel):
+    question: str
+    topic: str
+    difficulty: str
+
+class InterviewQuestionsResponse(BaseModel):
+    interview_questions: List[InterviewQuestion] = Field(default_factory=list)
+
+class InterviewQuestionsRequest(BaseModel):
+    question_count: Optional[int] = Field(default=10, description="Number of questions to generate")
+
