@@ -105,7 +105,18 @@ Uploads a PDF resume, extracts the text, uses the LLM to structure details, and 
 
 ---
 
+### `DELETE /profile/resume`
+
+Clears all resume-derived fields on the authenticated user's profile, resetting them to defaults. **(Protected)**
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Request:** none
+- **Response:** The updated profile document with reset resume fields (`resume_text` -> `None`, `skills` -> `[]`, `experience_years` -> `0.0`, `education` -> `None`, `preferred_roles` -> `[]`)
+
+---
+
 ## V2 Endpoints *(future — not yet designed)*
+
 
 - `GET /saved-jobs` — list user's bookmarked jobs
 - `POST /save-job` — bookmark a job

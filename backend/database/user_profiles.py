@@ -118,3 +118,33 @@ async def update_profile_by_user_id(user_id: str, update_fields: dict) -> Option
     )
     return doc
 
+
+async def clear_resume_fields_by_user_id(user_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Clears all resume-derived fields on the user's profile and returns the updated document.
+    """
+    from pymongo import ReturnDocument
+    db = get_database()
+    try:
+        query_id = ObjectId(user_id) if isinstance(user_id, str) else user_id
+    except Exception as e:
+        logger.error(f"Invalid user_id format: {user_id}. Error: {e}")
+        return None
+
+    clear_fields = {
+        "resume_text": None,
+        "skills": [],
+        "experience_years": 0.0,
+        "education": None,
+        "preferred_roles": [],
+        "updated_at": datetime.utcnow()
+    }
+
+    doc = await db.user_profiles.find_one_and_update(
+        {"user_id": query_id},
+        {"$set": clear_fields},
+        return_document=ReturnDocument.AFTER
+    )
+    return doc
+
+

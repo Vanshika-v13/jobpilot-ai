@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
-from schemas.profile import ResumeUploadResponse
-from database.user_profiles import get_or_create_profile, update_profile_by_user_id
+from schemas.profile import ResumeUploadResponse, UserProfileResponse
+from database.user_profiles import get_or_create_profile, update_profile_by_user_id, clear_resume_fields_by_user_id
 from core.auth import get_current_user
 from services.resume_service import validate_pdf, extract_text_from_pdf, parse_resume_with_llm
 
@@ -49,3 +49,20 @@ async def upload_resume(file: UploadFile = File(...), user_id: str = Depends(get
     updated_profile['_id'] = str(updated_profile['_id'])
     updated_profile['user_id'] = str(updated_profile['user_id'])
     return updated_profile
+
+
+@router.delete("/resume", response_model=UserProfileResponse)
+async def delete_resume(user_id: str = Depends(get_current_user)):
+    """
+    Clear all resume-derived fields on the authenticated user's profile.
+    """
+    updated_profile = await clear_resume_fields_by_user_id(user_id)
+    if not updated_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found"
+        )
+    updated_profile['_id'] = str(updated_profile['_id'])
+    updated_profile['user_id'] = str(updated_profile['user_id'])
+    return updated_profile
+

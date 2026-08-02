@@ -101,6 +101,9 @@ async def analyze_jd(job_id: str, profile_id: str) -> Dict[str, Any]:
     if not profile:
         raise ValueError(f"Profile not found: {profile_id}")
 
+    user_skills = profile.get("skills", [])
+    profile_has_skills = len(user_skills) > 0
+
     # Check read-through cache (only if skill_match_score is present/not null)
     if job.get("skill_match_score") is not None:
         logger.info(f"Returning cached analysis for job {job_id}")
@@ -113,6 +116,7 @@ async def analyze_jd(job_id: str, profile_id: str) -> Dict[str, Any]:
             "experience_required": job.get("experience_required", ""),
             "responsibilities": job.get("responsibilities", []),
             "important_keywords": job.get("important_keywords", []),
+            "profile_has_skills": profile_has_skills,
         }
 
     # Prepare job description
@@ -126,7 +130,6 @@ async def analyze_jd(job_id: str, profile_id: str) -> Dict[str, Any]:
     else:
         truncated_desc = sanitized
 
-    user_skills = profile.get("skills", [])
     llm_failed = False
     analysis_data = None
 
@@ -170,7 +173,7 @@ async def analyze_jd(job_id: str, profile_id: str) -> Dict[str, Any]:
         except Exception as retry_e:
             logger.error(f"Retry LLM analysis failed for job {job_id}: {retry_e}", exc_info=True)
             llm_failed = True
-
+ 
     # Handle LLM failure or empty response
     if llm_failed or not analysis_data:
         # Graceful fallback: return partial result using existing job fields if present
@@ -188,16 +191,17 @@ async def analyze_jd(job_id: str, profile_id: str) -> Dict[str, Any]:
             "experience_required": job.get("experience_required", ""),
             "responsibilities": job.get("responsibilities") or [],
             "important_keywords": job.get("important_keywords") or [],
+            "profile_has_skills": profile_has_skills,
         }
         return result
-
+ 
     # Success path: calculate skill gap and update MongoDB cache
     gap_results = calculate_skill_gap(
         analysis_data.required_skills,
         analysis_data.preferred_skills,
         user_skills
     )
-
+ 
     result = {
         "skill_match_score": gap_results["skill_match_score"],
         "matched_skills": gap_results["matched_skills"],
@@ -207,8 +211,9 @@ async def analyze_jd(job_id: str, profile_id: str) -> Dict[str, Any]:
         "experience_required": analysis_data.experience_required,
         "responsibilities": analysis_data.responsibilities,
         "important_keywords": analysis_data.important_keywords,
+        "profile_has_skills": profile_has_skills,
     }
-
+ 
     # Cache successful results (skill_match_score is not null)
     try:
         await db.jobs.update_one(
@@ -226,5 +231,6 @@ async def analyze_jd(job_id: str, profile_id: str) -> Dict[str, Any]:
         )
     except Exception as e:
         logger.error(f"Failed to cache analysis for job {job_id}: {e}")
-
+ 
     return result
+

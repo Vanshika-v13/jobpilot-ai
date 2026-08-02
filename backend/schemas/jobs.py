@@ -13,6 +13,8 @@ class JobAnalysisResponse(BaseModel):
     experience_required: str = ""
     responsibilities: List[str] = Field(default_factory=list)
     important_keywords: List[str] = Field(default_factory=list)
+    profile_has_skills: bool = False
+
 
 class InterviewQuestion(BaseModel):
     question: str

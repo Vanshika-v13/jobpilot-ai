@@ -31,11 +31,15 @@
    - Interview Agent implemented and verified. Generates behavioral and technical questions based on JDs and skill profiles, utilizing Pydantic parsing with retries, sanitization, and custom prompt templates.
 ✅ Phase 7 — Export
    - Export Agent generates Excel and PDF reports from ranked/analyzed job data, verified working end-to-end (files downloaded and visually confirmed correct). Deterministic file hashing prevents duplicate exports.
-✅ Phase 7.5 — Preparation for Frontend Integration
 ✅ Phase 7.6 — Resume Upload & Profile Extraction
    - Resume upload verified working end-to-end with a real resume PDF: correctly extracted skills, experience_years, and education using pdfplumber + LLM parsing.
    - Fixed ObjectId serialization bug in response model.
+✅ Phase 8 — Delete Resume (Backend Scope)
+   - Created `DELETE /api/v1/profile/resume` endpoint to clear resume-derived profile data while preserving user-managed fields.
+   - Enhanced `JobAnalysisResponse` with a `profile_has_skills` field to support empty-profile UX hints.
+   - Added comprehensive endpoint and analysis agent unit/integration tests.
 🚧 Phase 8 — Frontend Integration & Polish  ← current phase
+
 
 
 ---
