@@ -86,3 +86,35 @@ async def get_or_create_profile(user_id: str) -> Dict[str, Any]:
         await db.user_profiles.insert_one(default_profile)
         profile = default_profile
     return profile
+
+
+async def update_profile_by_user_id(user_id: str, update_fields: dict) -> Optional[Dict[str, Any]]:
+    """
+    Finds the profile by user_id and applies $set with the given fields + updated_at.
+    Returns the updated document.
+    """
+    from pymongo import ReturnDocument
+    db = get_database()
+    try:
+        query_id = ObjectId(user_id) if isinstance(user_id, str) else user_id
+    except Exception as e:
+        logger.error(f"Invalid user_id format: {user_id}. Error: {e}")
+        return None
+
+    fields_to_set = update_fields.copy()
+    fields_to_set["updated_at"] = datetime.utcnow()
+
+    # Sync preferred_location / preferred_locations if present
+    if "preferred_location" in fields_to_set and fields_to_set["preferred_location"]:
+        if "preferred_locations" not in fields_to_set or not fields_to_set["preferred_locations"]:
+            fields_to_set["preferred_locations"] = [fields_to_set["preferred_location"]]
+    elif "preferred_locations" in fields_to_set and fields_to_set["preferred_locations"]:
+        fields_to_set["preferred_location"] = fields_to_set["preferred_locations"][0]
+
+    doc = await db.user_profiles.find_one_and_update(
+        {"user_id": query_id},
+        {"$set": fields_to_set},
+        return_document=ReturnDocument.AFTER
+    )
+    return doc
+

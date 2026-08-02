@@ -29,3 +29,15 @@ class UserProfileResponse(BaseModel):
         arbitrary_types_allowed=True,
     )
 
+
+class ResumeExtractedData(BaseModel):
+    skills: List[str] = Field(default_factory=list)
+    experience_years: float = 0.0
+    education: str = ""
+    preferred_roles: List[str] = Field(default_factory=list)
+
+
+class ResumeUploadResponse(UserProfileResponse):
+    pass
+
+
