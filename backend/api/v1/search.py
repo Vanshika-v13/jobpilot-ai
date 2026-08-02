@@ -1,24 +1,20 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from schemas.search import SearchRequest, SearchResponse
-from database.user_profiles import get_profile_by_id
+from database.user_profiles import get_or_create_profile
 from database.collections import create_job_search, update_job_search_status
 from agents.graph import search_graph
+from core.auth import get_current_user
 
 router = APIRouter()
 
 @router.post("", response_model=SearchResponse)
-async def search_jobs(request: SearchRequest):
+async def search_jobs(request: SearchRequest, user_id: str = Depends(get_current_user)):
     """
     Triggers the LangGraph search pipeline to scrape, extract, score, and rank jobs
-    against a user profile.
+    against a user profile. Profile is automatically resolved from the authenticated user.
     """
-    # 1. Fetch user profile
-    profile = await get_profile_by_id(request.profile_id)
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User profile with ID {request.profile_id} not found"
-        )
+    # 1. Resolve user profile from authenticated user_id
+    profile = await get_or_create_profile(user_id)
     
     # Format profile: convert ObjectId to string or keep it
     if "_id" in profile:
@@ -28,7 +24,7 @@ async def search_jobs(request: SearchRequest):
 
     # 2. Create job_searches record in running state
     search_data = {
-        "user_id": profile.get("user_id"),
+        "user_id": user_id,
         "query": request.role,
         "location": request.location,
         "source": request.source,
@@ -76,3 +72,4 @@ async def search_jobs(request: SearchRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred during search pipeline execution: {str(e)}"
         )
+

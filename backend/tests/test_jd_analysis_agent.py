@@ -1,6 +1,7 @@
-import pytest
+import pytest  # type: ignore # pylint: disable=import-error
 from unittest.mock import AsyncMock, MagicMock, patch
-from bson import ObjectId
+from bson.objectid import ObjectId  # type: ignore # pylint: disable=import-error
+
 
 from agents.jd_analysis_agent import (
     calculate_skill_gap,

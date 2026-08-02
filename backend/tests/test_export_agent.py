@@ -1,8 +1,8 @@
 import os
-import pytest
+import pytest  # type: ignore # pylint: disable=import-error
 import openpyxl
 from unittest.mock import AsyncMock, MagicMock, patch
-from bson import ObjectId
+from bson.objectid import ObjectId  # type: ignore # pylint: disable=import-error
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter

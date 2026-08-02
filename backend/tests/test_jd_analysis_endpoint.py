@@ -4,8 +4,13 @@ from fastapi.testclient import TestClient
 from bson import ObjectId
 from main import app
 from agents.jd_analysis_agent import JDAnalysisModel
+from core.auth import create_access_token
 
 client = TestClient(app)
+
+def get_auth_headers(user_id: str = "507f1f77bcf86cd799439012"):
+    token = create_access_token(user_id)
+    return {"Authorization": f"Bearer {token}"}
 
 @pytest.mark.asyncio
 @patch("agents.jd_analysis_agent.get_llm")
@@ -17,7 +22,7 @@ async def test_analyze_endpoint_cached(mock_agent_db, mock_profile_db, mock_get_
     mock_profile_db.return_value = mock_db
 
     job_id = str(ObjectId())
-    profile_id = str(ObjectId())
+    user_id = "507f1f77bcf86cd799439012"
 
     # Mock job document with already cached analysis
     mock_db.jobs.find_one = AsyncMock(return_value={
@@ -33,12 +38,12 @@ async def test_analyze_endpoint_cached(mock_agent_db, mock_profile_db, mock_get_
     })
     
     mock_db.user_profiles.find_one = AsyncMock(return_value={
-        "_id": ObjectId(profile_id),
+        "_id": ObjectId("507f1f77bcf86cd799439011"),
+        "user_id": ObjectId(user_id),
         "skills": ["Python"],
     })
 
-    payload = {"profile_id": profile_id}
-    response = client.post(f"/api/v1/jobs/{job_id}/analyze", json=payload)
+    response = client.post(f"/api/v1/jobs/{job_id}/analyze", headers=get_auth_headers(user_id))
     
     assert response.status_code == 200
     data = response.json()
@@ -57,7 +62,7 @@ async def test_analyze_endpoint_uncached(mock_agent_db, mock_profile_db, mock_ge
     mock_profile_db.return_value = mock_db
 
     job_id = str(ObjectId())
-    profile_id = str(ObjectId())
+    user_id = "507f1f77bcf86cd799439012"
 
     # Mock job document without cached analysis
     mock_db.jobs.find_one = AsyncMock(return_value={
@@ -67,7 +72,8 @@ async def test_analyze_endpoint_uncached(mock_agent_db, mock_profile_db, mock_ge
     })
     
     mock_db.user_profiles.find_one = AsyncMock(return_value={
-        "_id": ObjectId(profile_id),
+        "_id": ObjectId("507f1f77bcf86cd799439011"),
+        "user_id": ObjectId(user_id),
         "skills": ["Python"],
     })
 
@@ -88,8 +94,7 @@ async def test_analyze_endpoint_uncached(mock_agent_db, mock_profile_db, mock_ge
 
     mock_db.jobs.update_one = AsyncMock()
 
-    payload = {"profile_id": profile_id}
-    response = client.post(f"/api/v1/jobs/{job_id}/analyze", json=payload)
+    response = client.post(f"/api/v1/jobs/{job_id}/analyze", headers=get_auth_headers(user_id))
     
     assert response.status_code == 200
     data = response.json()
@@ -108,42 +113,22 @@ async def test_analyze_endpoint_job_not_found(mock_agent_db, mock_profile_db):
     mock_profile_db.return_value = mock_db
 
     job_id = str(ObjectId())
-    profile_id = str(ObjectId())
+    user_id = "507f1f77bcf86cd799439012"
 
     # Mock job not found
     mock_db.jobs.find_one = AsyncMock(return_value=None)
     
-    payload = {"profile_id": profile_id}
-    response = client.post(f"/api/v1/jobs/{job_id}/analyze", json=payload)
+    # Mock user profile lookup to prevent crash
+    mock_db.user_profiles.find_one = AsyncMock(return_value={
+        "_id": ObjectId("507f1f77bcf86cd799439011"),
+        "user_id": ObjectId(user_id),
+        "skills": [],
+    })
+    
+    response = client.post(f"/api/v1/jobs/{job_id}/analyze", headers=get_auth_headers(user_id))
     
     assert response.status_code == 404
     assert "Job not found" in response.json()["detail"]
-
-
-@pytest.mark.asyncio
-@patch("database.user_profiles.get_database")
-@patch("agents.jd_analysis_agent.get_database")
-async def test_analyze_endpoint_profile_not_found(mock_agent_db, mock_profile_db):
-    mock_db = MagicMock()
-    mock_agent_db.return_value = mock_db
-    mock_profile_db.return_value = mock_db
-
-    job_id = str(ObjectId())
-    profile_id = str(ObjectId())
-
-    # Mock job found, but profile not found
-    mock_db.jobs.find_one = AsyncMock(return_value={
-        "_id": ObjectId(job_id),
-        "description": "Short description",
-        "skill_match_score": None,
-    })
-    mock_db.user_profiles.find_one = AsyncMock(return_value=None)
-    
-    payload = {"profile_id": profile_id}
-    response = client.post(f"/api/v1/jobs/{job_id}/analyze", json=payload)
-    
-    assert response.status_code == 404
-    assert "Profile not found" in response.json()["detail"]
 
 
 @pytest.mark.asyncio
@@ -156,7 +141,7 @@ async def test_analyze_endpoint_llm_failure_fallback(mock_agent_db, mock_profile
     mock_profile_db.return_value = mock_db
 
     job_id = str(ObjectId())
-    profile_id = str(ObjectId())
+    user_id = "507f1f77bcf86cd799439012"
 
     # Mock job document with existing Phase 3 skills
     mock_db.jobs.find_one = AsyncMock(return_value={
@@ -168,7 +153,8 @@ async def test_analyze_endpoint_llm_failure_fallback(mock_agent_db, mock_profile
     })
     
     mock_db.user_profiles.find_one = AsyncMock(return_value={
-        "_id": ObjectId(profile_id),
+        "_id": ObjectId("507f1f77bcf86cd799439011"),
+        "user_id": ObjectId(user_id),
         "skills": ["Python"],
     })
 
@@ -179,8 +165,7 @@ async def test_analyze_endpoint_llm_failure_fallback(mock_agent_db, mock_profile
 
     mock_db.jobs.update_one = AsyncMock()
 
-    payload = {"profile_id": profile_id}
-    response = client.post(f"/api/v1/jobs/{job_id}/analyze", json=payload)
+    response = client.post(f"/api/v1/jobs/{job_id}/analyze", headers=get_auth_headers(user_id))
     
     assert response.status_code == 200
     data = response.json()

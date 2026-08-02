@@ -1,6 +1,7 @@
 import asyncio
 from database.connection import connect_to_mongo, close_mongo_connection, get_database
-from bson import ObjectId
+from bson.objectid import ObjectId  # type: ignore # pylint: disable=import-error
+
 
 async def main():
     await connect_to_mongo()

@@ -1,10 +1,14 @@
 import os
-import pytest
+import pytest  # type: ignore # pylint: disable=import-error
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import AsyncMock, patch
-from bson import ObjectId
-
+from bson.objectid import ObjectId  # type: ignore # pylint: disable=import-error
 from main import app
+from core.auth import create_access_token
+
+def get_auth_headers(user_id: str = "507f1f77bcf86cd799439012"):
+    token = create_access_token(user_id)
+    return {"Authorization": f"Bearer {token}"}
 
 @pytest.mark.asyncio
 @patch("api.v1.export.get_jobs_by_ids")
@@ -28,7 +32,8 @@ async def test_export_endpoint_excel_success(mock_get_jobs):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/api/v1/export/",
-            json={"job_ids": [job_id], "format": "excel"}
+            json={"job_ids": [job_id], "format": "excel"},
+            headers=get_auth_headers()
         )
         
     assert response.status_code == 200
@@ -69,7 +74,8 @@ async def test_export_endpoint_pdf_success(mock_get_jobs):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/api/v1/export/",
-            json={"job_ids": [job_id], "format": "pdf"}
+            json={"job_ids": [job_id], "format": "pdf"},
+            headers=get_auth_headers()
         )
         
     assert response.status_code == 200
@@ -93,7 +99,8 @@ async def test_export_endpoint_invalid_format():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/api/v1/export/",
-            json={"job_ids": [str(ObjectId())], "format": "csv"}
+            json={"job_ids": [str(ObjectId())], "format": "csv"},
+            headers=get_auth_headers()
         )
     assert response.status_code == 400
     assert "Unsupported format" in response.json()["detail"]
@@ -105,7 +112,8 @@ async def test_export_endpoint_jobs_not_found(mock_get_jobs):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/api/v1/export/",
-            json={"job_ids": [str(ObjectId())], "format": "excel"}
+            json={"job_ids": [str(ObjectId())], "format": "excel"},
+            headers=get_auth_headers()
         )
     assert response.status_code == 404
     assert "No valid jobs found" in response.json()["detail"]

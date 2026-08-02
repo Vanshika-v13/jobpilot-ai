@@ -1,15 +1,16 @@
 import os
 import logging
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, status, Request, Depends
 from schemas.export import ExportRequest, ExportResponse
 from agents.export_agent import get_jobs_by_ids, get_export_filename, generate_excel_report, generate_pdf_report
+from core.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 @router.post("/", response_model=ExportResponse)
-async def export_jobs(request: Request, body: ExportRequest):
+async def export_jobs(request: Request, body: ExportRequest, user_id: str = Depends(get_current_user)):
     """
     Export job listings to Excel or PDF.
     """

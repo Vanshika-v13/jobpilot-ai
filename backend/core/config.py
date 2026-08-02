@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.1"
     vite_api_base_url: str = "http://localhost:8000"
     headless: bool = True
+    jwt_secret_key: str = "super-secret-key-for-jwt-signing-change-in-production"
+    jwt_algorithm: str = "HS256"
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(BACKEND_DIR, ".env"),

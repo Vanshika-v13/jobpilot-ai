@@ -2,7 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class JobAnalysisRequest(BaseModel):
-    profile_id: str
+    pass
 
 class JobAnalysisResponse(BaseModel):
     skill_match_score: Optional[int] = None

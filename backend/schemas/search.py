@@ -7,7 +7,6 @@ class SearchRequest(BaseModel):
     experience: str
     skills: List[str]
     source: str = "all"
-    profile_id: str
 
 class RankedJob(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")

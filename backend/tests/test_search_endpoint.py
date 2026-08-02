@@ -3,11 +3,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 from bson import ObjectId
 from main import app
+from core.auth import create_access_token
 
 client = TestClient(app)
 
+def get_auth_headers(user_id: str = "507f1f77bcf86cd799439012"):
+    token = create_access_token(user_id)
+    return {"Authorization": f"Bearer {token}"}
+
 @pytest.mark.asyncio
-@patch("api.v1.search.get_profile_by_id")
+@patch("api.v1.search.get_or_create_profile")
 @patch("api.v1.search.create_job_search")
 @patch("api.v1.search.update_job_search_status")
 @patch("tools.internshala.scrape_internshala")
@@ -26,9 +31,8 @@ async def test_search_endpoint_success(
     mock_get_profile
 ):
     # Mock profile
-    profile_id = "507f1f77bcf86cd799439011"
     mock_get_profile.return_value = {
-        "_id": ObjectId(profile_id),
+        "_id": ObjectId("507f1f77bcf86cd799439011"),
         "user_id": ObjectId("507f1f77bcf86cd799439012"),
         "skills": ["Python", "FastAPI"],
         "experience_years": 1.0,
@@ -97,11 +101,10 @@ async def test_search_endpoint_success(
         "location": "Remote",
         "experience": "0-2 years",
         "skills": ["Python", "FastAPI"],
-        "source": "all",
-        "profile_id": profile_id
+        "source": "all"
     }
     
-    response = client.post("/api/v1/search", json=payload)
+    response = client.post("/api/v1/search", json=payload, headers=get_auth_headers())
     assert response.status_code == 200
     
     data = response.json()
@@ -123,7 +126,7 @@ async def test_search_endpoint_success(
 
 
 @pytest.mark.asyncio
-@patch("api.v1.search.get_profile_by_id")
+@patch("api.v1.search.get_or_create_profile")
 @patch("api.v1.search.create_job_search")
 @patch("api.v1.search.update_job_search_status")
 @patch("tools.internshala.scrape_internshala")
@@ -139,9 +142,8 @@ async def test_search_endpoint_single_source(
     mock_create_search,
     mock_get_profile
 ):
-    profile_id = "507f1f77bcf86cd799439011"
     mock_get_profile.return_value = {
-        "_id": ObjectId(profile_id),
+        "_id": ObjectId("507f1f77bcf86cd799439011"),
         "skills": ["Python"],
         "experience_years": 1.0,
         "preferred_location": "Remote",
@@ -161,31 +163,12 @@ async def test_search_endpoint_single_source(
         "location": "Remote",
         "experience": "0-2 years",
         "skills": ["Python"],
-        "source": "internshala",
-        "profile_id": profile_id
+        "source": "internshala"
     }
     
-    response = client.post("/api/v1/search", json=payload)
+    response = client.post("/api/v1/search", json=payload, headers=get_auth_headers())
     assert response.status_code == 200
     
     # Verify ONLY internshala scraper was called
     mock_scrape_internshala.assert_called_once()
     mock_scrape_unstop.assert_not_called()
-
-
-@pytest.mark.asyncio
-@patch("api.v1.search.get_profile_by_id")
-async def test_search_endpoint_profile_not_found(mock_get_profile):
-    mock_get_profile.return_value = None
-    payload = {
-        "role": "Developer",
-        "location": "Remote",
-        "experience": "0-2 years",
-        "skills": ["Python"],
-        "source": "all",
-        "profile_id": "507f1f77bcf86cd799439011"
-    }
-    
-    response = client.post("/api/v1/search", json=payload)
-    assert response.status_code == 404
-    assert response.json()["detail"] == "User profile with ID 507f1f77bcf86cd799439011 not found"

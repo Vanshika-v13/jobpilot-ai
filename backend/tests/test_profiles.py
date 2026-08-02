@@ -2,8 +2,14 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from main import app
+from core.auth import create_access_token
 
 client = TestClient(app)
+
+# Helper for headers
+def get_auth_headers(user_id: str = "507f1f77bcf86cd799439012"):
+    token = create_access_token(user_id)
+    return {"Authorization": f"Bearer {token}"}
 
 @patch("api.v1.profiles.insert_profile")
 @patch("api.v1.profiles.get_profile_by_id")
@@ -23,7 +29,6 @@ def test_create_profile(mock_get_profile, mock_insert_profile):
     }
 
     payload = {
-        "user_id": "507f1f77bcf86cd799439012",
         "skills": ["Python", "FastAPI"],
         "experience_years": 2.0,
         "education": "B.Tech",
@@ -33,7 +38,7 @@ def test_create_profile(mock_get_profile, mock_insert_profile):
         "resume_text": "Sample resume content"
     }
 
-    response = client.post("/api/v1/profiles", json=payload)
+    response = client.post("/api/v1/profiles", json=payload, headers=get_auth_headers())
     assert response.status_code == 201
     data = response.json()
     assert (data.get("_id") or data.get("id")) == "507f1f77bcf86cd799439011"
@@ -58,7 +63,7 @@ def test_get_profile_success(mock_get_profile):
         "updated_at": "2026-07-26T12:00:00"
     }
 
-    response = client.get(f"/api/v1/profiles/{profile_id}")
+    response = client.get(f"/api/v1/profiles/{profile_id}", headers=get_auth_headers())
     assert response.status_code == 200
     data = response.json()
     assert (data.get("_id") or data.get("id")) == profile_id
@@ -69,6 +74,6 @@ def test_get_profile_success(mock_get_profile):
 @patch("api.v1.profiles.get_profile_by_id")
 def test_get_profile_not_found(mock_get_profile):
     mock_get_profile.return_value = None
-    response = client.get("/api/v1/profiles/507f1f77bcf86cd799439011")
+    response = client.get("/api/v1/profiles/507f1f77bcf86cd799439011", headers=get_auth_headers())
     assert response.status_code == 404
     assert response.json()["detail"] == "Profile not found"
